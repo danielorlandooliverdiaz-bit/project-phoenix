@@ -1,0 +1,41 @@
+---
+# --- CONFIGURACIÓN FIREWALL (UFW) ---
+- name: Permitir SSH en UFW (Para no bloquearnos)
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Permitir tráfico Web (HTTP/HTTPS)
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '80'
+    - '443'
+
+- name: Activar UFW y denegar todo lo demás por defecto
+  ufw:
+    state: enabled
+    policy: deny
+
+# --- HARDENING SSH ---
+- name: Prohibir login de root por SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+
+- name: Prohibir autenticación por contraseña (SOLO LLAVES)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+
+# --- REINICIO DIRECTO ---
+- name: Reiniciar servicio SSH para aplicar cambios
+  service:
+    name: ssh
+    state: restarted

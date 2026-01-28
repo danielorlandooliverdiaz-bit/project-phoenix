@@ -1,0 +1,17 @@
+---
+- name: Actualizar caché de apt y actualizar paquetes
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Instalar herramientas esenciales
+  apt:
+    name:
+      - htop
+      - git
+      - curl
+      - net-tools
+      - nano
+      - ufw
+    state: present

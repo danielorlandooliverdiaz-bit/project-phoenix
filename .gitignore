@@ -1,0 +1,15 @@
+# Archivos de reintento de Ansible (ruido)
+*.retry
+
+# Archivos temporales de editor y sistema
+*.swp
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Directorios de claves (Mejor prevenir que curar en el futuro)
+keys/
+*.pem
+id_rsa
