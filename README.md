@@ -25,6 +25,38 @@ El proyecto utiliza "Ansible Roles" para separar responsabilidades y `group_vars
 * Tener acceso SSH sin contraseña al servidor objetivo (`ssh-copy-id`).
 * Configurar la IP y la ruta de la llave privada en `inventory/hosts.ini`.
 
+
+# 3. Desplegar Infraestructura
+```Bash
+ansible-playbook site.yml
+🔧 Solución de Problemas y Notas Técnicas
+Virtualización Anidada (Incus/LXD)
+Si se despliega sobre contenedores Incus, Docker fallará al iniciar si no se habilita el anidamiento (nesting). Solución aplicada:
+
+Bash
+incus config set phoenix-vm security.nesting true
+Reiniciar el contenedor tras aplicar este cambio.
+```
+
+# Gestión de Llaves SSH
+
+El inventario está configurado para forzar el uso de una llave específica para evitar conflictos con el agente SSH:
+
+Archivo: inventory/hosts.ini
+
+Variable: ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+Variables Personalizables
+Para abrir nuevos puertos o añadir software base, no editar los roles. Editar group_vars/all.yml:
+
+YAML
+security_allowed_tcp_ports:
+  - '80'
+  - '443'
+  - '8080' # Ejemplo
+
+
+
 ### 2. Verificar Conectividad
 ```bash
 ansible all -m ping
