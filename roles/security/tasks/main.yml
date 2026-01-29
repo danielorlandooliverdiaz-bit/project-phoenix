@@ -5,14 +5,12 @@
     rule: allow
     name: OpenSSH
 
-- name: Permitir tráfico Web (HTTP/HTTPS)
+- name: Permitir puertos TCP definidos en variables
   ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  loop:
-    - '80'
-    - '443'
+  loop: "{{ security_allowed_tcp_ports }}"
 
 - name: Activar UFW y denegar todo lo demás por defecto
   ufw:

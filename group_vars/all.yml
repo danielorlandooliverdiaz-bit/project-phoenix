@@ -1,0 +1,19 @@
+---
+# --- VARIABLES GLOBALES DEL PROYECTO PHOENIX ---
+
+# Software Base (Role: Common)
+common_packages:
+  - htop
+  - git
+  - curl
+  - net-tools
+  - vim
+  - ufw
+  - tree  # ¡Aprovechamos para añadir una nueva herramienta útil!
+
+# Seguridad (Role: Security)
+security_ssh_port: 22
+security_allowed_tcp_ports:
+  - '80'   # HTTP
+  - '443'  # HTTPS
+  # Si mañana necesitas el 8080, solo lo añades aquí.

@@ -5,13 +5,7 @@
     upgrade: dist
     cache_valid_time: 3600
 
-- name: Instalar herramientas esenciales
+- name: Instalar herramientas esenciales definidos en variables
   apt:
-    name:
-      - htop
-      - git
-      - curl
-      - net-tools
-      - nano
-      - ufw
+    name: "{{ common_packages }}"
     state: present
