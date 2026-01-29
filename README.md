@@ -1,6 +1,48 @@
-# Proyecto Phoenix
+# 🔥 Proyecto Phoenix: Infraestructura como Código
 
-Infraestructura como código para servidor base seguro con Docker.
+Repositorio de automatización con **Ansible** para desplegar servidores de producción seguros y listos para contenedores, partiendo de una instalación mínima de Ubuntu Server.
+
+## 📋 Arquitectura
+
+* **Nodo de Control:** Pop!_OS (Ansible + Git).
+* **Nodo Objetivo:** Ubuntu Server 22.04 LTS (Ejecutándose en **Incus Container**).
+* **Filosofía:** Idempotencia, Seguridad por Diseño y Modularidad.
+
+## 🛠️ Estructura del Proyecto
+
+El proyecto utiliza "Ansible Roles" para separar responsabilidades y `group_vars` para la configuración centralizada:
+
+| Directorio | Propósito |
+| :--- | :--- |
+| `roles/common` | Actualización del sistema y paquetería base (vim, htop, git, tree, ufw). |
+| `roles/security` | **Hardening**: Configuración de Firewall (UFW) y blindaje de SSH (Solo llaves, no root). |
+| `roles/docker` | Instalación de Docker CE (Repo oficial) y configuración de usuarios sin sudo. |
+| `group_vars/` | **[Refactor]** Variables globales (puertos abiertos, listas de paquetes) para fácil edición. |
+
+## 🚀 Uso Rápido
+
+### 1. Requisitos Previos
+* Tener acceso SSH sin contraseña al servidor objetivo (`ssh-copy-id`).
+* Configurar la IP y la ruta de la llave privada en `inventory/hosts.ini`.
+
+### 2. Verificar Conectividad
+```bash
+ansible all -m ping
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Arquitectura
 - **Controlador:** Pop!_OS (Ansible)
