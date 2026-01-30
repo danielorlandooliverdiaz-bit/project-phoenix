@@ -1,0 +1,47 @@
+services:
+  victoriametrics:
+    container_name: argus-vm-db
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - "8428:8428"
+    volumes:
+      - vmdata:/storage
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--storageDataPath=/storage"
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
+    restart: always
+    networks:
+      - argus-net
+
+  loki:
+    container_name: argus-loki
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki-config.yml:/etc/loki/local-config.yaml
+      - ./data/loki:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: always
+    user: "10001:10001"  # Importante para los permisos
+    networks:
+      - argus-net
+
+  grafana:
+    container_name: argus-grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: always
+    networks:
+      - argus-net
+
+volumes:
+  vmdata:
+  grafana-data:
+
+networks:
+  argus-net:

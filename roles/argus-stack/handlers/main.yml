@@ -1,0 +1,5 @@
+---
+- name: reiniciar_argus
+  community.docker.docker_compose_v2:
+    project_src: /opt/argus-stack
+    state: restarted

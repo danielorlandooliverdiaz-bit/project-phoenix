@@ -1,0 +1,27 @@
+data_dir: "/var/lib/vector"
+
+# --- FUENTES (INPUTS) ---
+
+sources:
+  host_logs:
+    type: "journald"
+    include_units: ["ssh", "sudo", "docker", "nginx"]
+  
+  files:
+    type: "file"
+    include: ["/var/log/*.log", "/var/log/syslog"]
+    ignore_older_secs: 600
+
+# --- SALIDAS (SINKS) ---
+
+sinks:
+  loki_argus:
+    type: "loki"
+    inputs: ["host_logs", "files"]
+    endpoint: "http://10.2.84.252:3100"
+    encoding:
+      codec: "json"
+    labels:
+      host: "{{ inventory_hostname }}"
+      env: "production"
+      role: "phoenix-fleet"

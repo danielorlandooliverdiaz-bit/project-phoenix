@@ -1,9 +1,16 @@
 ---
-- name: Despliegue del Proyecto Phoenix
-  hosts: servers
-  become: yes  # Ejecutar todo como root (sudo)
-
+# 1. Configuración común para TODOS los servidores
+- hosts: all
+  become: yes
   roles:
     - common
     - security
     - docker
+    - monitoring  # Node Exporter (todos se vigilan)
+    - vector      # Logs (todos envían logs)
+
+# 2. Configuración específica del Servidor Argus
+- hosts: argus_server
+  become: yes
+  roles:
+    - argus-stack # <--- ¡NUEVO ROL!

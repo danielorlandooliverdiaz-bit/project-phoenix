@@ -1,0 +1,58 @@
+---
+- name: 📦 Instalar librería de Python para Docker (Necesaria para Ansible)
+  apt:
+    name: python3-docker
+    state: present
+
+- name: 📂 Crear estructura de directorios para Argus
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/argus-stack
+    - /opt/argus-stack/config
+    - /opt/argus-stack/data
+
+- name: 🔒 Crear carpeta de datos de Loki con permisos especiales (ID 10001)
+  file:
+    path: /opt/argus-stack/data/loki
+    state: directory
+    owner: 10001    # El usuario interno de Loki
+    group: 10001
+    mode: '0755'
+    recurse: yes    # Si hay subcarpetas, arréglalas también
+
+- name: 📝 Copiar archivos de configuración (Templates)
+  template:
+    src: "{{ item.src }}"
+    dest: "/opt/argus-stack/config/{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: 'prometheus.yml.j2', dest: 'prometheus.yml' }
+    - { src: 'loki-config.yml.j2', dest: 'loki-config.yml' }
+  notify: reiniciar_argus
+
+- name: 📝 Copiar Docker Compose
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/argus-stack/docker-compose.yml
+    mode: '0644'
+  notify: reiniciar_argus
+
+- name: 🛡️ Configurar Firewall (UFW) específico para Argus
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+    comment: "Regla Argus Stack"
+  loop:
+    - '3000'  # Grafana
+    - '3100'  # Loki
+    - '8428'  # VictoriaMetrics
+
+- name: 🚀 Levantar el Stack Argus (Docker Compose)
+  community.docker.docker_compose_v2:
+    project_src: /opt/argus-stack
+    state: present
+    pull: always

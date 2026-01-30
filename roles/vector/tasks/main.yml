@@ -1,0 +1,56 @@
+---
+- name: ⬇️ Descargar paquete .deb de Vector
+  get_url:
+    url: "https://packages.timber.io/vector/0.36.0/vector_0.36.0-1_amd64.deb"
+    dest: "/tmp/vector.deb"
+    mode: '0644'
+
+- name: 📦 Instalar Vector desde el archivo .deb
+  apt:
+    deb: "/tmp/vector.deb"
+    state: present
+
+- name: 👮 Añadir usuario 'vector' a grupos de lectura de logs
+  user:
+    name: vector
+    groups: adm,systemd-journal
+    append: yes
+
+- name: 📂 Asegurar permisos correctos en carpeta de datos
+  file:
+    path: /var/lib/vector
+    state: directory
+    owner: vector
+    group: vector
+    mode: '0755'
+    recurse: yes
+
+# --- LIMPIEZA DE INTENTOS ANTERIORES (Por si acaso) ---
+- name: 🧹 Borrar configuraciones antiguas (TOML y Overrides)
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/vector/vector.toml
+    - /etc/systemd/system/vector.service.d
+# -----------------------------------------------------
+
+- name: ⚙️ Configurar Vector (Usando el estándar YAML)
+  template:
+    src: vector.yaml.j2       # <--- Usamos la nueva plantilla
+    dest: /etc/vector/vector.yaml  # <--- Ruta por defecto que busca el servicio
+    owner: vector
+    group: vector
+    mode: '0644'
+    force: yes
+  notify: restart_vector
+
+- name: 🔄 Recargar Systemd (Por si borramos overrides)
+  systemd:
+    daemon_reload: yes
+
+- name: 🚀 Asegurar que el servicio Vector está activo
+  systemd:
+    name: vector
+    state: started
+    enabled: yes
