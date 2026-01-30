@@ -1,6 +1,6 @@
 ---
 - name: Despliegue del Proyecto Phoenix
-  hosts: phoenix_servers
+  hosts: servers
   become: yes  # Ejecutar todo como root (sudo)
 
   roles:
