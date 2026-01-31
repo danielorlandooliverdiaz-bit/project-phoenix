@@ -29,6 +29,7 @@
       - acl
       - libicu-dev
       - libssl-dev
+      - tar
     state: present
 
 # AQUÍ VIENE LA MAGIA: Registro automático

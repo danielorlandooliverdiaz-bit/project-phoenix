@@ -31,11 +31,11 @@
     # 👇 TU REPO YA PUESTO:
     github_repo: "danielorlandooliverdiaz-bit/TechneNexus"
     # 👇 PEGA AQUÍ EL TOKEN QUE ACABAS DE COPIAR:
-    github_token: "BXXEBLXYM33RNB6OUW27OP3JPZ2HA"
+    github_token: "BXXEBLWOMH6GCU5MC5GDPBLJP2PFI"
   roles:
-    - github_runner
-    - registry
-
+    - role: github_runner
+    - role: registry
+      tags: ['github_runner', 'registry' ]
 
 
 
