@@ -26,6 +26,7 @@
 - name: ⚙️ Instalar dependencias de .NET (Necesarias para el Runner)
   apt:
     pkg:
+      - acl
       - libicu-dev
       - libssl-dev
     state: present
