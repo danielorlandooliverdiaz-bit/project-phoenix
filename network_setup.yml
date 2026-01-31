@@ -1,0 +1,47 @@
+---
+- name: 🛡️ Configuración de Red e Infraestructura (Incus Hypervisor)
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    # 📝 AQUÍ DEFINIMOS LA VERDAD ABSOLUTA DE LAS IPs
+    # Si cambias algo aquí, se aplicará al ejecutar el playbook.
+    containers:
+      - name: omni-vm
+        ip: "10.2.84.10"
+      
+      - name: forge-vm
+        ip: "10.2.84.20"
+      
+      - name: phoenix-vm
+        ip: "10.2.84.30"
+      
+      - name: argus-vm
+        ip: "10.2.84.40"
+      
+      - name: broom-vm
+        ip: "10.2.84.50"
+      
+      - name: legami-vm
+        ip: "10.2.84.60"
+
+  tasks:
+    - name: 🔒 Fijar IP estática (Override/Set) en cada contenedor
+      shell: |
+        # Lógica Idempotente:
+        # 1. Intentamos hacer override del dispositivo eth0 (funciona si viene del perfil default)
+        # 2. Si falla (porque ya existe), hacemos un set para actualizar el valor
+        incus config device override {{ item.name }} eth0 ipv4.address={{ item.ip }} 2>/dev/null || \
+        incus config device set {{ item.name }} eth0 ipv4.address={{ item.ip }}
+      loop: "{{ containers }}"
+      register: ip_result
+      changed_when: "ip_result.rc == 0"
+      # Esto asegura que la IP esté configurada en la base de datos de Incus
+
+    - name: ♻️ Reiniciar contenedores para aplicar cambios de IP
+      shell: |
+        incus restart {{ item.name }}
+      loop: "{{ containers }}"
+      # Solo reiniciamos para asegurar que tomen la IP. 
+      # En un entorno ultra-pro, comprobaríamos si ya tienen la IP antes de reiniciar.
+      ignore_errors: yes
