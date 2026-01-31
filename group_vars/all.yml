@@ -1,6 +1,6 @@
 ---
 # --- VARIABLES GLOBALES DEL PROYECTO PHOENIX ---
-
+cloudflare_tunnel_token: "eyJhIjoiY2Q1MmIyYmIzMWRiMDNmOWU1YjI4N2QxMjhlYTEzY2YiLCJ0IjoiOWQ1NDhlM2UtYmExNS00MjgxLWI0MDctZWFlMDAxNDg5YTg3IiwicyI6IlkyTm1ZVGhoTXpndE1qQmpOaTAwTmpBMUxXRTVaakV0TkRKbE4yUXlPR05tTUdZMyJ9"
 # Software Base (Role: Common)
 common_packages:
   - htop

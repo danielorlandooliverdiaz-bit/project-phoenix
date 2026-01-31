@@ -1,0 +1,45 @@
+---
+- name: 📂 Crear estructura de directorios para Gateway
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/omni-gateway
+    - /opt/omni-gateway/config
+    - /opt/omni-gateway/config/dynamic
+
+
+- name: 🛡️ Permitir tráfico Web en Omni
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '80'
+    - '443'  # <--- CRUCIAL
+    - '8080'
+
+
+- name: 📝 Copiar configuraciones de Traefik
+  template:
+    src: "{{ item.src }}"
+    dest: "/opt/omni-gateway/config/{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: 'traefik.yml.j2', dest: 'traefik.yml' }
+    - { src: 'routes.yml.j2', dest: 'dynamic/routes.yml' }
+  # Nota: Traefik recarga la config dinámica en caliente, no hace falta reiniciar para routes.yml
+
+- name: 📝 Copiar Docker Compose
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/omni-gateway/docker-compose.yml
+    mode: '0644'
+  notify: reiniciar_traefik
+
+- name: 🚀 Levantar Omni Gateway
+  community.docker.docker_compose_v2:
+    project_src: /opt/omni-gateway
+    state: present
+    pull: always

@@ -1,0 +1,57 @@
+---
+- name: 📦 Crear usuario para el Runner
+  user:
+    name: runner
+    groups: docker
+    shell: /bin/bash
+    append: yes
+
+- name: 📂 Crear directorio del Runner
+  file:
+    path: /opt/actions-runner
+    state: directory
+    owner: runner
+    group: runner
+    mode: '0755'
+
+- name: ⬇️ Descargar GitHub Actions Runner (v2.311.0)
+  unarchive:
+    src: https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
+    dest: /opt/actions-runner
+    remote_src: yes
+    owner: runner
+    group: runner
+    creates: /opt/actions-runner/bin/Runner.Listener  # Solo descarga si no existe
+
+- name: ⚙️ Instalar dependencias de .NET (Necesarias para el Runner)
+  apt:
+    pkg:
+      - libicu-dev
+      - libssl-dev
+    state: present
+
+# AQUÍ VIENE LA MAGIA: Registro automático
+- name: 🔑 Registrar el Runner en GitHub (Si no existe ya)
+  become_user: runner
+  command: >
+    ./config.sh --url https://github.com/{{ github_repo }} 
+    --token {{ github_token }} 
+    --name "{{ inventory_hostname }}" 
+    --work _work 
+    --unattended 
+    --replace
+  args:
+    chdir: /opt/actions-runner
+    creates: /opt/actions-runner/.credentials  # Evita registrarse dos veces
+
+- name: 📄 Instalar el servicio Systemd del Runner
+  command: ./svc.sh install runner
+  args:
+    chdir: /opt/actions-runner
+  ignore_errors: true  # Ignora error si ya está instalado
+
+- name: 🚀 Arrancar el servicio del Runner
+  command: ./svc.sh start
+  args:
+    chdir: /opt/actions-runner
+  ignore_errors: true

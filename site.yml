@@ -1,7 +1,7 @@
 ---
 # 1. Configuración común para TODOS los servidores
 - hosts: all
-  become: yes
+  become: true
   roles:
     - common
     - security
@@ -11,6 +11,33 @@
 
 # 2. Configuración específica del Servidor Argus
 - hosts: argus_server
-  become: yes
+  become: true
   roles:
     - argus-stack # <--- ¡NUEVO ROL!
+
+
+- hosts: gateway
+  become: true
+  roles:
+    - role: gateway  # <--- Nuevo rol
+
+
+
+# 3. Configuración de la Fábrica (Forge)
+- hosts: builders
+  become: true
+  vars:
+    # 👇 TU REPO YA PUESTO:
+    github_repo: "danielorlandooliverdiaz-bit/TechneNexus"
+    # 👇 PEGA AQUÍ EL TOKEN QUE ACABAS DE COPIAR:
+    github_token: "BXXEBLXYM33RNB6OUW27OP3JPZ2HA"
+  roles:
+    - github_runner
+    - registry
+
+
+
+
+
+
+

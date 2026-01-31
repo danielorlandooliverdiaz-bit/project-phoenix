@@ -42,3 +42,12 @@
     name: sysadmin
     groups: docker
     append: yes
+
+- name: 🔓 Permitir Registry Inseguro (Local)
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "insecure-registries" : ["10.2.84.38:5000"]
+      }
+  notify: reiniciar_docker  # Asegúrate de tener un handler para reiniciar docker

@@ -25,12 +25,49 @@
     line: 'PermitRootLogin no'
     state: present
 
+
+
+- name: 🔑 Autorizar llave de despliegue (Para GitHub Actions)
+  ansible.posix.authorized_key:
+    user: sysadmin
+    state: present
+    key: "{{ item }}"
+  loop:
+    # Pega aquí el contenido de cat ~/.ssh/deploy_key_phoenix.pub
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCqUQCSd9AP1oVYo+N6HKlwhITLpth5FXvmDy+CO8gaqoo21X3wL3Pr+uiVQeZdX0+BujXzllfT7f/LjKSEuFGwn3LQv28S2d8YuTonCZyGQAKLLmGqYZfE6TAxcZ4Wch9l9kOplBwA33jByqWrmwz7Brd6ofdiZjM34OMXqnFlb38woZXvp68+INYVEgGc2kzTwZfQKAMSEQYpTujJ7Wl4a95F/5tExlGT3v50o7gvW2xymVOwow7babUwYJZK9gjF6xAPevRC92sowWtq0QJv9ePC+CyYRKoAwJU3i1i2FPU3dgcffB9Eshrk/SPzD3H+d7ST25YEs1ALXL6mozgmGDlnMMSLiQOIIIluTGFtOKJl4KL1WWcSG5qVb5UadQwFmhdENw/imlOXMRQ5OH9zhW7EMgUFzysDwYTpIYoOzYpSUQDtfMdFEL6miPwSXheax9zZVWHTuBrcOnQX9nIB6k6PmCX98U3XZBq49IKIXKeNi1mwf6On5DF5kq64ZqhxTo+AbdkfP0nkE5rE53LyG2qP0tOqExNulo9ujP/n+/6+1KGOp13QJIDIaqFVtwrl6kHlxwT13h0Qihf0CpMde5dgz+4LQJtLNj71zuoTwmvkh50npph1Db8Y7Tvha4cxJxYaY0jUhYOyVzHvSf/fbeaoBGfLa+pdExfmDtcT9Q== deploy@technenexus"
+
+
+
+
+
 - name: Prohibir autenticación por contraseña (SOLO LLAVES)
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^PasswordAuthentication'
     line: 'PasswordAuthentication no'
     state: present
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # --- REINICIO DIRECTO ---
 - name: Reiniciar servicio SSH para aplicar cambios

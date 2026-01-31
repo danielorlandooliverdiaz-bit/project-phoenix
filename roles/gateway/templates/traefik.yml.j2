@@ -1,0 +1,15 @@
+api:
+  dashboard: true
+  
+entryPoints:
+  web:
+    address: ":80"
+
+
+providers:
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true  # Si cambias el archivo, Traefik se actualiza solo sin reinicios
+
+log:
+  level: debug

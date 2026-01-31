@@ -1,0 +1,53 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: omni-traefik
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+
+    # FIX 1: Variable para calmar a Docker (API 1.44)
+    environment:
+      - DOCKER_API_VERSION=1.44
+
+    # Eliminamos environment, usamos flags directos
+    command:
+      - "--configFile=/etc/traefik/traefik.yml"
+      # Configuración del Proveedor Docker (Explícita)
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.apiVersion=1.44"  # <--- AQUÍ ESTÁ LA CLAVE
+    
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config/dynamic:/etc/traefik/dynamic:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`omni-infra.technenexus.dev`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+    networks:
+      - omni-net
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: omni-tunnel
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN={{ cloudflare_tunnel_token }} # La pasaremos por variable
+    networks:
+      - omni-net
+
+  
+
+networks:
+  omni-net:
+    driver: bridge

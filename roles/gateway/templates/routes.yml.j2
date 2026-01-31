@@ -1,0 +1,14 @@
+http:
+  routers:
+    # --- Router para GRAFANA (En Argus) ---
+    grafana-rtr:
+      rule: "Host(`grafana-infra.technenexus.dev`)"
+      service: "grafana-svc"
+      entryPoints: ["web"]
+
+  services:
+    # --- Servicio: Grafana está en la IP de Argus, puerto 3000 ---
+    grafana-svc:
+      loadBalancer:
+        servers:
+          - url: "http://10.2.84.252:3000"

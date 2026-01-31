@@ -1,0 +1,19 @@
+---
+- name: 📂 Crear directorio para persistencia de imágenes
+  file:
+    path: /opt/registry-data
+    state: directory
+    mode: '0755'
+
+- name: 🚀 Levantar contenedor Docker Registry
+  docker_container:
+    name: local-registry
+    image: registry:2
+    state: started
+    restart_policy: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - /opt/registry-data:/var/lib/registry
+    env:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"

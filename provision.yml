@@ -1,0 +1,110 @@
+---
+- name: Provisioning Technenexus
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    project_name: "techne-nexus-omni-project"
+    incus_socket: "unix:/var/lib/incus/unix.socket"
+    
+    # Tu llave SSH (La misma de siempre)
+    ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCKkj9wyouB2KLTjKx0yvM7d30/xF4QtRXUQHUAYGntkYXwPgN42beJdF7vs3H0pgwvKEvqA1fe876zErNRZMFl66rUXhd8kV+CNmGp2Lue2A939h6uPaE2g4mMvYYBcfoxgsWE7mY7J3chhMFFVFtF0rznZDtmuNDeykoOQY6/hkJcowh4WC+1TCU62zM09jXlHg3eLFeCYkJM8jLYHS9r6q3GD4Ik152rsOwkRkHirw6cIkt937lUOzkMM6BJ0bKL2RtTsEPLdPiCusgl/aQnefcaTzq9bV6KHIikQ4YafRSkN5OGa91XMvSvOH+MfMS/f7pgLNfmIJmJXZ1QKMMRXjHAo33xiAkhuNxK17zfYHO03PivLrKjnKYJUi/xUBjj/k75tv3ipiTp8MCtXlabwQ069o3/5jNts8HCMwZ0hpBwhT/M7iP7AH3lVHs3pmiVGL7IvJib/vb+tYHfww8VukfA9JjqAUZZ6yOxINFooZI5CCCtbHHxpb5gBnlrFuxDrsv/xeVakqRWlspJ7/lp9DTNDDiXkGHcsUhgtow89Fai/RPkSr4+Tjc1CBYKtLQHyQ41DhF8qLe8We0IlpkkCHIQ9anvZCKNWx1QM3TGzmakcxPhKUAEkB9hv+m9rxW6CrtgO/SfnfiDo3jRPhMY98AIfsixvWunf6kUiB+uuw== daniel@pop-os"
+    ssh_deploy_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCqUQCSd9AP1oVYo+N6HKlwhITLpth5FXvmDy+CO8gaqoo21X3wL3Pr+uiVQeZdX0+BujXzllfT7f/LjKSEuFGwn3LQv28S2d8YuTonCZyGQAKLLmGqYZfE6TAxcZ4Wch9l9kOplBwA33jByqWrmwz7Brd6ofdiZjM34OMXqnFlb38woZXvp68+INYVEgGc2kzTwZfQKAMSEQYpTujJ7Wl4a95F/5tExlGT3v50o7gvW2xymVOwow7babUwYJZK9gjF6xAPevRC92sowWtq0QJv9ePC+CyYRKoAwJU3i1i2FPU3dgcffB9Eshrk/SPzD3H+d7ST25YEs1ALXL6mozgmGDlnMMSLiQOIIIluTGFtOKJl4KL1WWcSG5qVb5UadQwFmhdENw/imlOXMRQ5OH9zhW7EMgUFzysDwYTpIYoOzYpSUQDtfMdFEL6miPwSXheax9zZVWHTuBrcOnQX9nIB6k6PmCX98U3XZBq49IKIXKeNi1mwf6On5DF5kq64ZqhxTo+AbdkfP0nkE5rE53LyG2qP0tOqExNulo9ujP/n+/6+1KGOp13QJIDIaqFVtwrl6kHlxwT13h0Qihf0CpMde5dgz+4LQJtLNj71zuoTwmvkh50npph1Db8Y7Tvha4cxJxYaY0jUhYOyVzHvSf/fbeaoBGfLa+pdExfmDtcT9Q== deploy@technenexus"
+    flota:
+      #--- YA ESTÁN LISTAS (Las comentamos para ahorrar tiempo) ---
+      # - name: omni-vm
+      #   ram: 2GB
+      #   cores: 2
+      # - name: argus-vm
+      #   ram: 4GB
+      #   cores: 2
+      # - name: phoenix-vm
+      #   ram: 2GB
+      #   cores: 2
+      # - name: broom-vm
+      #   ram: 2GB
+      #   cores: 2
+      # - name: legami-vm
+      #   ram: 2GB
+      #   cores: 2
+      - name: forge-vm
+        ram: 4GB
+        cores: 2
+
+  tasks:
+    # 1. Asegurar proyecto (Se hace rápido)
+    - name: Asegurar proyecto Incus
+      community.general.lxd_project:
+        url: "{{ incus_socket }}"
+        name: "{{ project_name }}"
+        state: present
+        config:
+          features.images: "true"
+          features.profiles: "true"
+          features.storage.volumes: "true"
+          features.storage.buckets: "true"
+
+    # 2. Perfil (Ya existe, pasará rápido)
+    - name: Asegurar perfil corporate-base
+      community.general.lxd_profile:
+        url: "{{ incus_socket }}"
+        name: corporate-base
+        project: "{{ project_name }}"
+        config:
+          security.nesting: "true"
+          user.user-data: |
+            #cloud-config
+            package_update: true
+            package_upgrade: true
+            timezone: Europe/Madrid
+            packages:
+              - openssh-server
+              - curl
+              - git
+              - htop
+              - net-tools
+              - python3
+              - sudo
+              - nano
+            users:
+              - name: sysadmin
+                groups: sudo
+                shell: /bin/bash
+                sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                ssh_authorized_keys:
+                  - {{ ssh_key }}
+                  - {{ ssh_deploy_key }}
+            runcmd:
+              - systemctl enable ssh
+              - systemctl start ssh
+              - echo "Provisioned by Ansible: {{ ansible_date_time.iso8601 }}" > /etc/provisioning_done
+        description: "Perfil Base Nexus Omni (IaC)"
+
+    # 3. CREAR FORGE (Con fuente explícita)
+    - name: Provisioning de contenedores
+      community.general.lxd_container:
+        url: "{{ incus_socket }}"
+        name: "{{ item.name }}"
+        project: "{{ project_name }}"
+        state: started
+        source:
+          # 👇 CAMBIO CLAVE: Definimos todo para que no se pierda
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: ubuntu/jammy/cloud
+        profiles: ["default", "corporate-base"]
+        config:
+          limits.memory: "{{ item.ram }}"
+          limits.cpu: "{{ item.cores }}"
+        wait_for_ipv4_addresses: true
+        timeout: 600
+      loop: "{{ flota }}"
+      register: incus_result
+
+    - name: Resultado
+      debug:
+        msg: "✅ {{ item.item.name }} IP: {{ item.addresses.eth0[0].address | default('Ya existe') }}"
+      loop: "{{ incus_result.results }}"
+      when: item.item is defined and item.addresses is defined
