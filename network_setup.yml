@@ -2,46 +2,61 @@
 - name: 🛡️ Configuración de Red e Infraestructura (Incus Hypervisor)
   hosts: localhost
   connection: local
-  become: yes
+  gather_facts: no  # No necesitamos facts de localhost, va más rápido así
   vars:
-    # 📝 AQUÍ DEFINIMOS LA VERDAD ABSOLUTA DE LAS IPs
-    # Si cambias algo aquí, se aplicará al ejecutar el playbook.
+    # 📝 LA VERDAD ABSOLUTA DE LAS IPs (Esquema limpio)
     containers:
       - name: omni-vm
-        ip: "10.2.84.10"
-      
-      - name: forge-vm
-        ip: "10.2.84.20"
-      
-      - name: phoenix-vm
-        ip: "10.2.84.30"
+        ip: "10.2.84.10"   # Gateway
       
       - name: argus-vm
-        ip: "10.2.84.40"
+        ip: "10.2.84.20"   # Monitorización
+      
+      - name: phoenix-vm
+        ip: "10.2.84.30"   # App Producción
       
       - name: broom-vm
-        ip: "10.2.84.50"
+        ip: "10.2.84.40"   # Utilidades
       
       - name: legami-vm
-        ip: "10.2.84.60"
+        ip: "10.2.84.50"   # Legacy/Otros
+      
+      - name: forge-vm
+        ip: "10.2.84.60"   # CI/CD & Registry
 
   tasks:
-    - name: 🔒 Fijar IP estática (Override/Set) en cada contenedor
+    - name: 🔍 Verificar y Aplicar IP Estática (Solo si es necesario)
       shell: |
-        # Lógica Idempotente:
-        # 1. Intentamos hacer override del dispositivo eth0 (funciona si viene del perfil default)
-        # 2. Si falla (porque ya existe), hacemos un set para actualizar el valor
-        incus config device override {{ item.name }} eth0 ipv4.address={{ item.ip }} 2>/dev/null || \
-        incus config device set {{ item.name }} eth0 ipv4.address={{ item.ip }}
+        # 1. Obtener la IP configurada actualmente (si existe)
+        CURRENT_IP=$(incus config device get {{ item.name }} eth0 ipv4.address 2>/dev/null || echo "none")
+        
+        # 2. Comparar con la deseada
+        if [ "$CURRENT_IP" != "{{ item.ip }}" ]; then
+            echo "CHANGE_NEEDED"
+            # Intentar override (si viene del perfil) o set (si ya tiene override)
+            incus config device override {{ item.name }} eth0 ipv4.address={{ item.ip }} 2>/dev/null || \
+            incus config device set {{ item.name }} eth0 ipv4.address={{ item.ip }}
+        else
+            echo "OK"
+        fi
       loop: "{{ containers }}"
-      register: ip_result
-      changed_when: "ip_result.rc == 0"
-      # Esto asegura que la IP esté configurada en la base de datos de Incus
+      register: ip_config_result
+      # Solo marcamos "changed" si el script imprimió "CHANGE_NEEDED"
+      changed_when: "'CHANGE_NEEDED' in ip_config_result.stdout"
 
-    - name: ♻️ Reiniciar contenedores para aplicar cambios de IP
+    - name: ♻️ Reiniciar contenedores (Solo los que han cambiado)
       shell: |
-        incus restart {{ item.name }}
-      loop: "{{ containers }}"
-      # Solo reiniciamos para asegurar que tomen la IP. 
-      # En un entorno ultra-pro, comprobaríamos si ya tienen la IP antes de reiniciar.
-      ignore_errors: yes
+        incus restart {{ item.item.name }}
+      loop: "{{ ip_config_result.results }}"
+      when: item.changed  # <--- ¡LA MAGIA! Solo reinicia si cambió la IP
+      async: 60           # No bloquea indefinidamente
+      poll: 0             # Lanzamos el reinicio y seguimos (esperamos abajo)
+
+    - name: ⏳ Esperar a que las máquinas respondan
+      wait_for:
+        host: "{{ item.item.ip }}"
+        state: started
+        timeout: 60
+      loop: "{{ ip_config_result.results }}"
+      when: item.changed
+      delegate_to: localhost

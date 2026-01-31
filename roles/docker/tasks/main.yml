@@ -48,6 +48,6 @@
     dest: /etc/docker/daemon.json
     content: |
       {
-        "insecure-registries" : ["10.2.84.38:5000"]
+        "insecure-registries" : ["10.2.84.60:5000"]
       }
   notify: reiniciar_docker  # Asegúrate de tener un handler para reiniciar docker
