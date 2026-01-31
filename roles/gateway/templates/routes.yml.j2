@@ -6,9 +6,26 @@ http:
       service: "grafana-svc"
       entryPoints: ["web"]
 
+
+    # 👇 --- NUEVO ROUTER: TECHNE NEXUS APP --- 👇
+    technenexus-rtr:
+      # Definimos el dominio público que quieras usar (ej: www.technenexus.dev)
+      rule: "Host(`app.technenexus.dev`)"
+      service: "technenexus-svc"
+      entryPoints: ["web"]
+
+
   services:
     # --- Servicio: Grafana está en la IP de Argus, puerto 3000 ---
     grafana-svc:
       loadBalancer:
         servers:
           - url: "http://10.2.84.252:3000"
+
+
+    # 👇 --- NUEVO SERVICIO: PHOENIX APP --- 👇
+    technenexus-svc:
+      loadBalancer:
+        servers:
+          # La IP de Phoenix-VM donde corre tu Docker
+          - url: "http://10.2.84.95:80"

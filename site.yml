@@ -19,7 +19,8 @@
 - hosts: gateway
   become: true
   roles:
-    - role: gateway  # <--- Nuevo rol
+    - role: gateway 
+      tags: ['gateway'] 
 
 
 
