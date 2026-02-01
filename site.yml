@@ -33,9 +33,8 @@
     # 👇 PEGA AQUÍ EL TOKEN QUE ACABAS DE COPIAR:
     github_token: "BXXEBLWOMH6GCU5MC5GDPBLJP2PFI"
   roles:
-    - role: github_runner
-    - role: registry
-      tags: ['github_runner', 'registry' ]
+    - github_runner
+    - registry
 
 
 
